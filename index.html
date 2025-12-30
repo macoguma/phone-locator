@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Locator | Austine</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --neon: #00f3ff; --bg: #0a0f18; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        
+        .locator-card { 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 40px; 
+            border-radius: 20px; 
+            border: 1px solid rgba(0, 243, 255, 0.2); 
+            width: 100%; 
+            max-width: 400px; 
+            text-align: center;
+        }
+
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; color: var(--neon); margin-bottom: 30px; }
+        
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        
+        input { 
+            width: 100%; background: #000; border: 1px solid #333; 
+            padding: 15px; border-radius: 10px; color: white; font-size: 1.2rem; 
+            box-sizing: border-box; outline: none; transition: 0.3s;
+        }
+        input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
+
+        .locate-btn { 
+            background: var(--neon); color: black; border: none; width: 100%; 
+            padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; 
+            font-family: 'Orbitron', sans-serif; margin-top: 10px;
+        }
+
+        .results { 
+            margin-top: 30px; padding: 20px; border-radius: 10px; 
+            background: rgba(0,0,0,0.5); display: none; text-align: left;
+            border: 1px solid #222;
+        }
+        .res-item { margin-bottom: 8px; font-size: 0.95rem; }
+        .res-label { color: var(--neon); font-weight: 600; margin-right: 10px; }
+        
+        .nav-home { margin-top: 30px; text-decoration: none; color: #555; font-size: 0.8rem; transition: 0.3s; }
+        .nav-home:hover { color: var(--neon); }
+    </style>
+</head>
+<body>
+
+    <div class="locator-card">
+        <h1>SIGNAL SCANNER</h1>
+
+        <div class="input-group">
+            <label>International Number Format</label>
+            <input type="text" id="phoneInput" placeholder="+254 XXX XXX XXX">
+        </div>
+
+        <button class="locate-btn" onclick="startScan()">RUN ANALYSIS</button>
+
+        <div id="resultsBox" class="results">
+            <div class="res-item"><span class="res-label">ORIGIN:</span> <span id="resCountry">-</span></div>
+            <div class="res-item"><span class="res-label">CARRIER:</span> <span id="resCarrier">-</span></div>
+            <div class="res-item"><span class="res-label">SIGNAL:</span> 🟢 SECURE</div>
+        </div>
+    </div>
+
+    <a href="https://macoguma.github.io/success-/" class="nav-home">RETURN TO MAIN HUB</a>
+
+    <script>
+        function startScan() {
+            const input = document.getElementById('phoneInput').value;
+            const resBox = document.getElementById('resultsBox');
+            const btn = document.querySelector('.locate-btn');
+
+            if (!input.includes('+')) {
+                alert("Please use international format (starting with +)");
+                return;
+            }
+
+            btn.innerText = "SCANNING...";
+            resBox.style.display = "none";
+
+            setTimeout(() => {
+                btn.innerText = "RUN ANALYSIS";
+                resBox.style.display = "block";
+                
+                if(input.startsWith("+254")) {
+                    document.getElementById('resCountry').innerText = "KENYA";
+                    document.getElementById('resCarrier').innerText = "SAFARICOM / AIRTEL";
+                } else if(input.startsWith("+1")) {
+                    document.getElementById('resCountry').innerText = "USA";
+                    document.getElementById('resCarrier').innerText = "AT&T / VERIZON";
+                } else {
+                    document.getElementById('resCountry').innerText = "INTERNATIONAL";
+                    document.getElementById('resCarrier').innerText = "GLOBAL ROAMING";
+                }
+            }, 1200);
+        }
+    </script>
+</body>
+</html>
