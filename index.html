@@ -3,72 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Austine's Tech | Live Tracker</title>
+    <title>Austine's Tech | Live Signal Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --neon: #00f3ff; --bg: #05080a; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
-        .locator-card { background: rgba(10, 15, 24, 0.9); padding: 30px; border-radius: 20px; border: 1px solid var(--neon); width: 100%; max-width: 450px; text-align: center; }
+        
+        .locator-card { background: rgba(10, 15, 24, 0.9); padding: 30px; border-radius: 20px; border: 1px solid var(--neon); width: 100%; max-width: 450px; text-align: center; overflow: hidden; position: relative; }
+        
+        /* Radar Animation */
+        .radar-container { width: 150px; height: 150px; margin: 0 auto 20px; position: relative; border: 2px solid #111; border-radius: 50%; display: none; }
+        .radar-sweep { 
+            position: absolute; width: 50%; height: 50%; top: 0; left: 50%;
+            background: linear-gradient(45deg, rgba(0,243,255,0.5), transparent);
+            transform-origin: bottom left; animation: rotate 2s linear infinite;
+            border-right: 2px solid var(--neon);
+        }
+        @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
         h1 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--neon); margin-bottom: 20px; }
         input { width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 10px; color: white; font-size: 1.2rem; box-sizing: border-box; outline: none; margin-bottom: 15px; text-align: center; }
-        .locate-btn { background: var(--neon); color: black; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-family: 'Orbitron', sans-serif; margin-bottom: 10px; }
-        .link-box { background: #111; padding: 10px; border-radius: 5px; font-size: 0.8rem; color: #888; display: none; margin-top: 10px; border: 1px dashed #444; word-break: break-all; }
+        
+        .locate-btn { background: var(--neon); color: black; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-family: 'Orbitron', sans-serif; }
+        
+        .link-box { background: #001a1d; padding: 15px; border-radius: 10px; font-size: 0.8rem; border: 1px solid var(--neon); margin-top: 15px; display: none; }
         #map { height: 250px; width: 100%; border-radius: 15px; margin-top: 20px; border: 1px solid #222; display: none; }
+        .status-text { color: var(--neon); font-size: 0.8rem; font-family: 'Orbitron'; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="locator-card">
         <h1>AUSTINE'S TECH</h1>
-        <p style="font-size: 0.7rem; color: #888; margin-bottom: 15px;">LIVE SATELLITE TRIANGULATION</p>
         
-        <input type="text" id="phoneInput" placeholder="+254 7XX XXX XXX">
-        <button class="locate-btn" onclick="generateLink()">GENERATE LIVE TRACK LINK</button>
-        
-        <div id="linkOutput" class="link-box"></div>
-
-        <div id="resultsBox" style="display:none; margin-top:20px; text-align: left; font-size: 0.9rem;">
-            <p><span style="color:var(--neon)">STATUS:</span> WAITING FOR SIGNAL...</p>
+        <div id="radar" class="radar-container">
+            <div class="radar-sweep"></div>
         </div>
-        
+
+        <div id="inputSection">
+            <input type="text" id="phoneInput" placeholder="+254 XXX XXX XXX">
+            <button class="locate-btn" onclick="generateTrackingLink()">GET LIVE PERMISSION</button>
+        </div>
+
+        <div id="linkOutput" class="link-box">
+            <p style="margin:0 0 10px 0; color: #fff;">SHARE THIS PERMISSION LINK:</p>
+            <code id="finalLink" style="color: var(--neon); word-break: break-all;"></code>
+            <p style="font-size: 0.65rem; color: #888; margin-top: 10px;">The map will activate once the target clicks "Allow Location" on this link.</p>
+        </div>
+
+        <div id="status" class="status-text"></div>
         <div id="map"></div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        function generateLink() {
+        let map;
+
+        function generateTrackingLink() {
             const num = document.getElementById('phoneInput').value;
-            if(!num.includes('+')) { alert("Enter International Format"); return; }
-            
-            const linkBox = document.getElementById('linkOutput');
-            const mapDiv = document.getElementById('map');
-            const resBox = document.getElementById('resultsBox');
-            
-            // In a real app, this link would lead to a page that grabs GPS
-            const fakeLink = "https://austine-tech.tracker.io/v3/signal-" + Math.random().toString(36).substring(7);
-            
-            linkBox.innerText = "Send this link to target: " + fakeLink;
-            linkBox.style.display = "block";
-            resBox.style.display = "block";
-            
-            // Simulate the target clicking the link after 5 seconds
+            if(!num.startsWith('+')) { alert("Use International Format"); return; }
+
+            // Step 1: Show Radar
+            document.getElementById('inputSection').style.display = "none";
+            document.getElementById('radar').style.display = "block";
+            document.getElementById('status').innerText = "ENCRYPTING PERMISSION SIGNAL...";
+
             setTimeout(() => {
-                resBox.innerHTML = `<p><span style="color:var(--neon)">SIGNAL ACQUIRED:</span> ${num}</p>
-                                   <p><span style="color:var(--neon)">LOCATION:</span> LIVE GPS FEED ACTIVE</p>`;
-                showMap();
-            }, 5000);
+                // Step 2: Generate the link
+                // In a professional setup, this would be your "target.html" page
+                const trackingLink = window.location.href; 
+                document.getElementById('finalLink').innerText = trackingLink;
+                document.getElementById('linkOutput').style.display = "block";
+                document.getElementById('status').innerText = "AWAITING TARGET SIGNAL...";
+                
+                // SIMULATION: After 6 seconds, we simulate the person clicking 'Allow'
+                // In a real live app, you would use a "Webhook" or "Firebase" to trigger this
+                simulateSignalAcquisition();
+            }, 2500);
         }
 
-        function showMap() {
-            const mapDiv = document.getElementById('map');
-            mapDiv.style.display = "block";
-            const map = L.map('map').setView([-1.286389, 36.817223], 15);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            L.marker([-1.286389, 36.817223]).addTo(map).bindPopup("Live Target Found").openPopup();
+        function simulateSignalAcquisition() {
+            setTimeout(() => {
+                document.getElementById('radar').style.display = "none";
+                document.getElementById('status').innerText = "SIGNAL ACQUIRED. LIVE FEED ACTIVE.";
+                showLiveMap();
+            }, 6000);
+        }
+
+        function showLiveMap() {
+            document.getElementById('map').style.display = "block";
+            // Centering on a live location (Mombasa coordinates for example)
+            const lat = -4.0435;
+            const lon = 39.6682;
+            
+            if (!map) {
+                map = L.map('map').setView([lat, lon], 16);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                L.marker([lat, lon]).addTo(map).bindPopup("<b>TARGET LIVE</b>").openPopup();
+            }
         }
     </script>
 </body>
 </html>
-       
-            
