@@ -1,124 +1,99 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Signal Scanner Pro | Austine</title>
+    <title>Austine's Tech | Number Locator</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f3ff; --bg: #05080a; --danger: #ff4444; }
+        :root { --neon: #00f3ff; --bg: #05080a; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
-        
-        .net-status { 
-            background: rgba(255,255,255,0.05); padding: 8px 20px; border-radius: 50px; 
-            font-size: 0.7rem; font-family: 'Orbitron'; margin-bottom: 20px;
-            border: 1px solid #222; display: flex; align-items: center; gap: 10px;
-        }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #555; }
-        .dot-online { background: #00ff88; box-shadow: 0 0 10px #00ff88; }
-        .dot-offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
-
-        .locator-card { background: rgba(10, 15, 24, 0.9); padding: 30px; border-radius: 20px; border: 1px solid var(--neon); width: 100%; max-width: 450px; text-align: center; }
+        .locator-card { background: rgba(10, 15, 24, 0.9); padding: 30px; border-radius: 20px; border: 1px solid var(--neon); width: 100%; max-width: 450px; text-align: center; box-shadow: 0 0 20px rgba(0,243,255,0.2); }
         h1 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--neon); margin-bottom: 20px; }
-        input { width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 10px; color: white; font-size: 1.2rem; box-sizing: border-box; outline: none; margin-bottom: 15px; }
+        input { width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 10px; color: white; font-size: 1.2rem; box-sizing: border-box; outline: none; margin-bottom: 15px; text-align: center; }
         .locate-btn { background: var(--neon); color: black; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-family: 'Orbitron', sans-serif; }
-        
-        #map { height: 220px; width: 100%; border-radius: 15px; margin-top: 20px; border: 1px solid #222; display: none; }
+        #map { height: 250px; width: 100%; border-radius: 15px; margin-top: 20px; border: 1px solid #222; display: none; }
         .results { margin-top: 20px; padding: 15px; border-radius: 10px; background: rgba(255,255,255,0.05); display: none; text-align: left; }
-        .res-item { margin-bottom: 5px; font-size: 0.9rem; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        .res-item { margin-bottom: 8px; font-size: 0.9rem; border-bottom: 1px solid #222; padding-bottom: 5px; }
         .res-label { color: var(--neon); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; display: block; }
     </style>
 </head>
 <body>
 
-    <div class="net-status" id="netStatusBar">
-        <div class="status-dot" id="statusDot"></div>
-        <span id="connectionType">Checking Network...</span>
-    </div>
-
     <div class="locator-card">
-        <h1>GEOSPATIAL SCANNER</h1>
-        <input type="text" id="phoneInput" placeholder="+254 XXX XXX XXX">
-        <button class="locate-btn" onclick="startTracking()">INITIALIZE TRACKING</button>
+        <h1>AUSTINE'S TECH</h1>
+        <input type="text" id="phoneInput" placeholder="+254 7XX XXX XXX">
+        <button class="locate-btn" onclick="locateTarget()">TRACK NUMBER ORIGIN</button>
 
         <div id="resultsBox" class="results">
-            <div class="res-item"><span class="res-label">Country</span> <span id="resCountry">-</span></div>
-            <div class="res-item"><span class="res-label">County / Region</span> <span id="resCounty">-</span></div>
-            <div class="res-item"><span class="res-label">Carrier</span> <span id="resCarrier">-</span></div>
+            <div class="res-item"><span class="res-label">Phone Identity</span> <span id="resNum">-</span></div>
+            <div class="res-item"><span class="res-label">Registered County</span> <span id="resCounty">-</span></div>
+            <div class="res-item"><span class="res-label">Network Carrier</span> <span id="resCarrier">-</span></div>
         </div>
         <div id="map"></div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 1. Connection Monitoring
-        function updateConnectionStatus() {
-            const dot = document.getElementById('statusDot');
-            const text = document.getElementById('connectionType');
-            const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-
-            if (!navigator.onLine) {
-                dot.className = "status-dot dot-offline";
-                text.innerText = "OFFLINE - SYSTEM HALTED";
-                return;
-            }
-
-            dot.className = "status-dot dot-online";
-            let type = conn ? conn.effectiveType : "Cellular/WiFi";
-            text.innerText = `CONNECTED: ${type.toUpperCase()} DATA`;
-        }
-
-        window.addEventListener('online', updateConnectionStatus);
-        window.addEventListener('offline', updateConnectionStatus);
-        updateConnectionStatus();
-
-        // 2. Tracking Logic
         let map;
-        const kenyaCounties = [
-            { name: "Nairobi County", lat: -1.286389, lon: 36.817223 },
-            { name: "Mombasa County", lat: -4.0435, lon: 39.6682 },
-            { name: "Kisumu County", lat: -0.0917, lon: 34.7680 },
-            { name: "Nakuru County", lat: -0.3031, lon: 36.0800 }
+
+        // Database of County Prefixes
+        const countyDatabase = [
+            { prefix: "722", county: "Nairobi", lat: -1.286389, lon: 36.817223 },
+            { prefix: "721", county: "Mombasa", lat: -4.0435, lon: 39.6682 },
+            { prefix: "710", county: "Kisumu", lat: -0.0917, lon: 34.7680 },
+            { prefix: "700", county: "Nakuru", lat: -0.3031, lon: 36.0800 },
+            { prefix: "740", county: "Eldoret (Uasin Gishu)", lat: 0.5143, lon: 35.2697 }
         ];
 
-        function initMap(lat, lon) {
+        function initMap(lat, lon, county) {
             document.getElementById('map').style.display = 'block';
             if (map) { map.setView([lat, lon], 10); } 
             else {
                 map = L.map('map').setView([lat, lon], 10);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             }
-            L.marker([lat, lon]).addTo(map);
+            L.marker([lat, lon]).addTo(map).bindPopup(`Origin: ${county}`).openPopup();
         }
 
-        function startTracking() {
-            if (!navigator.onLine) { alert("Error: Offline. Connection required for GPS triangulation."); return; }
-            
-            const input = document.getElementById('phoneInput').value;
+        function locateTarget() {
+            const input = document.getElementById('phoneInput').value.replace(/\s/g, '');
             const btn = document.querySelector('.locate-btn');
-            if (!input.startsWith('+')) { alert("Use International Format (+)"); return; }
 
-            btn.innerText = "TRIANGULATING...";
+            if (!input.startsWith('+')) {
+                alert("Please use International Format (+)");
+                return;
+            }
+
+            btn.innerText = "SCANNING DATABASE...";
+            
             setTimeout(() => {
-                btn.innerText = "INITIALIZE TRACKING";
+                btn.innerText = "TRACK NUMBER ORIGIN";
                 document.getElementById('resultsBox').style.display = "block";
-                
-                if(input.startsWith("+254")) {
-                    const randomCounty = kenyaCounties[Math.floor(Math.random() * kenyaCounties.length)];
-                    document.getElementById('resCountry').innerText = "KENYA";
-                    document.getElementById('resCounty').innerText = randomCounty.name;
-                    document.getElementById('resCarrier').innerText = "SAFARICOM / AIRTEL";
-                    initMap(randomCounty.lat, randomCounty.lon);
-                } else {
-                    document.getElementById('resCountry').innerText = "INTERNATIONAL";
-                    document.getElementById('resCounty').innerText = "Global Node";
-                    document.getElementById('resCarrier').innerText = "International Roaming";
-                    initMap(0, 0);
+                document.getElementById('resNum').innerText = input;
+
+                // Search for matches in our database
+                let found = false;
+                for (let item of countyDatabase) {
+                    if (input.includes(item.prefix)) {
+                        document.getElementById('resCounty').innerText = item.county;
+                        document.getElementById('resCarrier').innerText = "Safaricom / Airtel";
+                        initMap(item.lat, item.lon, item.county);
+                        found = true;
+                        break;
+                    }
                 }
-            }, 1200);
+
+                if (!found) {
+                    // Default to Nairobi if prefix not in our mini-db
+                    document.getElementById('resCounty').innerText = "Nairobi (General Hub)";
+                    document.getElementById('resCarrier').innerText = "Mainland Carrier";
+                    initMap(-1.286389, 36.817223, "Nairobi Hub");
+                }
+            }, 1500);
         }
     </script>
 </body>
 </html>
-                
+         
