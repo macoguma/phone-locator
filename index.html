@@ -1,108 +1,116 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Austine's Tech | Live Signal Tracker</title>
+    <title>Austine's Tech | Control Center</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --neon: #00f3ff; --bg: #05080a; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
         
-        .locator-card { background: rgba(10, 15, 24, 0.9); padding: 30px; border-radius: 20px; border: 1px solid var(--neon); width: 100%; max-width: 450px; text-align: center; overflow: hidden; position: relative; }
-        
-        /* Radar Animation */
-        .radar-container { width: 150px; height: 150px; margin: 0 auto 20px; position: relative; border: 2px solid #111; border-radius: 50%; display: none; }
-        .radar-sweep { 
-            position: absolute; width: 50%; height: 50%; top: 0; left: 50%;
-            background: linear-gradient(45deg, rgba(0,243,255,0.5), transparent);
-            transform-origin: bottom left; animation: rotate 2s linear infinite;
-            border-right: 2px solid var(--neon);
+        .locator-card { 
+            background: rgba(10, 15, 24, 0.9); 
+            padding: 30px; 
+            border-radius: 20px; 
+            border: 1px solid var(--neon); 
+            width: 100%; 
+            max-width: 450px; 
+            text-align: center; 
+            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
+        }
+
+        /* Radar Scanner UI */
+        .radar-box { 
+            width: 120px; height: 120px; margin: 0 auto 20px; 
+            border: 2px solid #111; border-radius: 50%; 
+            position: relative; overflow: hidden; display: none;
+        }
+        .sweep { 
+            position: absolute; width: 100%; height: 100%; 
+            background: conic-gradient(from 0deg, rgba(0,243,255,0.4), transparent 90deg);
+            animation: rotate 2s linear infinite; transform-origin: center;
         }
         @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        h1 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--neon); margin-bottom: 20px; }
-        input { width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 10px; color: white; font-size: 1.2rem; box-sizing: border-box; outline: none; margin-bottom: 15px; text-align: center; }
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 1.6rem; color: var(--neon); margin-bottom: 5px; }
+        .sub-text { font-size: 0.7rem; color: #555; margin-bottom: 25px; letter-spacing: 2px; }
         
-        .locate-btn { background: var(--neon); color: black; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-family: 'Orbitron', sans-serif; }
-        
-        .link-box { background: #001a1d; padding: 15px; border-radius: 10px; font-size: 0.8rem; border: 1px solid var(--neon); margin-top: 15px; display: none; }
-        #map { height: 250px; width: 100%; border-radius: 15px; margin-top: 20px; border: 1px solid #222; display: none; }
-        .status-text { color: var(--neon); font-size: 0.8rem; font-family: 'Orbitron'; margin-top: 10px; }
+        input { 
+            width: 100%; background: #000; border: 1px solid #333; 
+            padding: 15px; border-radius: 10px; color: white; font-size: 1.2rem; 
+            box-sizing: border-box; outline: none; margin-bottom: 15px; text-align: center;
+        }
+
+        .locate-btn { 
+            background: var(--neon); color: black; border: none; width: 100%; 
+            padding: 16px; border-radius: 10px; font-weight: bold; cursor: pointer; 
+            font-family: 'Orbitron', sans-serif; transition: 0.3s;
+        }
+        .locate-btn:hover { box-shadow: 0 0 15px var(--neon); }
+
+        .link-output { 
+            background: #001a1d; padding: 15px; border-radius: 10px; 
+            font-size: 0.8rem; border: 1px solid var(--neon); 
+            margin-top: 20px; display: none; word-break: break-all;
+        }
+
+        #status { color: var(--neon); font-size: 0.8rem; font-family: 'Orbitron'; margin-top: 15px; }
+        .nav-home { margin-top: 30px; text-decoration: none; color: #444; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
     <div class="locator-card">
         <h1>AUSTINE'S TECH</h1>
-        
-        <div id="radar" class="radar-container">
-            <div class="radar-sweep"></div>
+        <div class="sub-text">SATELLITE INTERFACE v3.0</div>
+
+        <div id="radar" class="radar-box">
+            <div class="sweep"></div>
         </div>
 
-        <div id="inputSection">
+        <div id="ui-main">
             <input type="text" id="phoneInput" placeholder="+254 XXX XXX XXX">
-            <button class="locate-btn" onclick="generateTrackingLink()">GET LIVE PERMISSION</button>
+            <button class="locate-btn" onclick="initiateScan()">GENERATE PERMISSION LINK</button>
         </div>
 
-        <div id="linkOutput" class="link-box">
-            <p style="margin:0 0 10px 0; color: #fff;">SHARE THIS PERMISSION LINK:</p>
-            <code id="finalLink" style="color: var(--neon); word-break: break-all;"></code>
-            <p style="font-size: 0.65rem; color: #888; margin-top: 10px;">The map will activate once the target clicks "Allow Location" on this link.</p>
+        <div id="linkBox" class="link-output">
+            <p style="margin: 0 0 10px 0; color: #fff;">SEND THIS TO TARGET:</p>
+            <code id="displayLink" style="color: var(--neon);"></code>
+            <p style="font-size: 0.6rem; color: #666; margin-top: 10px;">The map data will trigger on your WhatsApp once they click "Play".</p>
         </div>
 
-        <div id="status" class="status-text"></div>
-        <div id="map"></div>
+        <div id="status"></div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <a href="https://macoguma.github.io/success-/" class="nav-home">← BACK TO HUB</a>
+
     <script>
-        let map;
-
-        function generateTrackingLink() {
+        function initiateScan() {
             const num = document.getElementById('phoneInput').value;
-            if(!num.startsWith('+')) { alert("Use International Format"); return; }
+            if(!num.includes('+')) { alert("Enter International Format (+254...)"); return; }
 
-            // Step 1: Show Radar
-            document.getElementById('inputSection').style.display = "none";
-            document.getElementById('radar').style.display = "block";
-            document.getElementById('status').innerText = "ENCRYPTING PERMISSION SIGNAL...";
+            const radar = document.getElementById('radar');
+            const status = document.getElementById('status');
+            const linkBox = document.getElementById('linkBox');
+            const displayLink = document.getElementById('displayLink');
+
+            radar.style.display = "block";
+            status.innerText = "ENCRYPTING SIGNAL...";
 
             setTimeout(() => {
-                // Step 2: Generate the link
-                // In a professional setup, this would be your "target.html" page
-                const trackingLink = window.location.href; 
-                document.getElementById('finalLink').innerText = trackingLink;
-                document.getElementById('linkOutput').style.display = "block";
-                document.getElementById('status').innerText = "AWAITING TARGET SIGNAL...";
+                // Generates link to your track.html file
+                const userRepo = window.location.href.split('index.html')[0];
+                const trackUrl = userRepo + "track.html";
                 
-                // SIMULATION: After 6 seconds, we simulate the person clicking 'Allow'
-                // In a real live app, you would use a "Webhook" or "Firebase" to trigger this
-                simulateSignalAcquisition();
-            }, 2500);
-        }
-
-        function simulateSignalAcquisition() {
-            setTimeout(() => {
-                document.getElementById('radar').style.display = "none";
-                document.getElementById('status').innerText = "SIGNAL ACQUIRED. LIVE FEED ACTIVE.";
-                showLiveMap();
-            }, 6000);
-        }
-
-        function showLiveMap() {
-            document.getElementById('map').style.display = "block";
-            // Centering on a live location (Mombasa coordinates for example)
-            const lat = -4.0435;
-            const lon = 39.6682;
-            
-            if (!map) {
-                map = L.map('map').setView([lat, lon], 16);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                L.marker([lat, lon]).addTo(map).bindPopup("<b>TARGET LIVE</b>").openPopup();
-            }
+                displayLink.innerText = trackUrl;
+                linkBox.style.display = "block";
+                status.innerText = "AWAITING TARGET GPS...";
+            }, 2000);
         }
     </script>
 </body>
 </html>
+
+            
