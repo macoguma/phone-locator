@@ -1,99 +1,74 @@
-   <!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Austine's Tech | Number Locator</title>
+    <title>Austine's Tech | Live Tracker</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
         :root { --neon: #00f3ff; --bg: #05080a; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
-        .locator-card { background: rgba(10, 15, 24, 0.9); padding: 30px; border-radius: 20px; border: 1px solid var(--neon); width: 100%; max-width: 450px; text-align: center; box-shadow: 0 0 20px rgba(0,243,255,0.2); }
+        .locator-card { background: rgba(10, 15, 24, 0.9); padding: 30px; border-radius: 20px; border: 1px solid var(--neon); width: 100%; max-width: 450px; text-align: center; }
         h1 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--neon); margin-bottom: 20px; }
         input { width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 10px; color: white; font-size: 1.2rem; box-sizing: border-box; outline: none; margin-bottom: 15px; text-align: center; }
-        .locate-btn { background: var(--neon); color: black; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-family: 'Orbitron', sans-serif; }
+        .locate-btn { background: var(--neon); color: black; border: none; width: 100%; padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; font-family: 'Orbitron', sans-serif; margin-bottom: 10px; }
+        .link-box { background: #111; padding: 10px; border-radius: 5px; font-size: 0.8rem; color: #888; display: none; margin-top: 10px; border: 1px dashed #444; word-break: break-all; }
         #map { height: 250px; width: 100%; border-radius: 15px; margin-top: 20px; border: 1px solid #222; display: none; }
-        .results { margin-top: 20px; padding: 15px; border-radius: 10px; background: rgba(255,255,255,0.05); display: none; text-align: left; }
-        .res-item { margin-bottom: 8px; font-size: 0.9rem; border-bottom: 1px solid #222; padding-bottom: 5px; }
-        .res-label { color: var(--neon); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; display: block; }
     </style>
 </head>
 <body>
 
     <div class="locator-card">
         <h1>AUSTINE'S TECH</h1>
+        <p style="font-size: 0.7rem; color: #888; margin-bottom: 15px;">LIVE SATELLITE TRIANGULATION</p>
+        
         <input type="text" id="phoneInput" placeholder="+254 7XX XXX XXX">
-        <button class="locate-btn" onclick="locateTarget()">TRACK NUMBER ORIGIN</button>
+        <button class="locate-btn" onclick="generateLink()">GENERATE LIVE TRACK LINK</button>
+        
+        <div id="linkOutput" class="link-box"></div>
 
-        <div id="resultsBox" class="results">
-            <div class="res-item"><span class="res-label">Phone Identity</span> <span id="resNum">-</span></div>
-            <div class="res-item"><span class="res-label">Registered County</span> <span id="resCounty">-</span></div>
-            <div class="res-item"><span class="res-label">Network Carrier</span> <span id="resCarrier">-</span></div>
+        <div id="resultsBox" style="display:none; margin-top:20px; text-align: left; font-size: 0.9rem;">
+            <p><span style="color:var(--neon)">STATUS:</span> WAITING FOR SIGNAL...</p>
         </div>
+        
         <div id="map"></div>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let map;
-
-        // Database of County Prefixes
-        const countyDatabase = [
-            { prefix: "722", county: "Nairobi", lat: -1.286389, lon: 36.817223 },
-            { prefix: "721", county: "Mombasa", lat: -4.0435, lon: 39.6682 },
-            { prefix: "710", county: "Kisumu", lat: -0.0917, lon: 34.7680 },
-            { prefix: "700", county: "Nakuru", lat: -0.3031, lon: 36.0800 },
-            { prefix: "740", county: "Eldoret (Uasin Gishu)", lat: 0.5143, lon: 35.2697 }
-        ];
-
-        function initMap(lat, lon, county) {
-            document.getElementById('map').style.display = 'block';
-            if (map) { map.setView([lat, lon], 10); } 
-            else {
-                map = L.map('map').setView([lat, lon], 10);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-            }
-            L.marker([lat, lon]).addTo(map).bindPopup(`Origin: ${county}`).openPopup();
+        function generateLink() {
+            const num = document.getElementById('phoneInput').value;
+            if(!num.includes('+')) { alert("Enter International Format"); return; }
+            
+            const linkBox = document.getElementById('linkOutput');
+            const mapDiv = document.getElementById('map');
+            const resBox = document.getElementById('resultsBox');
+            
+            // In a real app, this link would lead to a page that grabs GPS
+            const fakeLink = "https://austine-tech.tracker.io/v3/signal-" + Math.random().toString(36).substring(7);
+            
+            linkBox.innerText = "Send this link to target: " + fakeLink;
+            linkBox.style.display = "block";
+            resBox.style.display = "block";
+            
+            // Simulate the target clicking the link after 5 seconds
+            setTimeout(() => {
+                resBox.innerHTML = `<p><span style="color:var(--neon)">SIGNAL ACQUIRED:</span> ${num}</p>
+                                   <p><span style="color:var(--neon)">LOCATION:</span> LIVE GPS FEED ACTIVE</p>`;
+                showMap();
+            }, 5000);
         }
 
-        function locateTarget() {
-            const input = document.getElementById('phoneInput').value.replace(/\s/g, '');
-            const btn = document.querySelector('.locate-btn');
-
-            if (!input.startsWith('+')) {
-                alert("Please use International Format (+)");
-                return;
-            }
-
-            btn.innerText = "SCANNING DATABASE...";
-            
-            setTimeout(() => {
-                btn.innerText = "TRACK NUMBER ORIGIN";
-                document.getElementById('resultsBox').style.display = "block";
-                document.getElementById('resNum').innerText = input;
-
-                // Search for matches in our database
-                let found = false;
-                for (let item of countyDatabase) {
-                    if (input.includes(item.prefix)) {
-                        document.getElementById('resCounty').innerText = item.county;
-                        document.getElementById('resCarrier').innerText = "Safaricom / Airtel";
-                        initMap(item.lat, item.lon, item.county);
-                        found = true;
-                        break;
-                    }
-                }
-
-                if (!found) {
-                    // Default to Nairobi if prefix not in our mini-db
-                    document.getElementById('resCounty').innerText = "Nairobi (General Hub)";
-                    document.getElementById('resCarrier').innerText = "Mainland Carrier";
-                    initMap(-1.286389, 36.817223, "Nairobi Hub");
-                }
-            }, 1500);
+        function showMap() {
+            const mapDiv = document.getElementById('map');
+            mapDiv.style.display = "block";
+            const map = L.map('map').setView([-1.286389, 36.817223], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            L.marker([-1.286389, 36.817223]).addTo(map).bindPopup("Live Target Found").openPopup();
         }
     </script>
 </body>
 </html>
-         
+       
+            
