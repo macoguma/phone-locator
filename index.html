@@ -3,103 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Phone Locator | Austine</title>
+    <title>Signal Scanner Pro | Austine</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --neon: #00f3ff; --bg: #0a0f18; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+        :root { --neon: #00f3ff; --bg: #05080a; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: white; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; }
         
         .locator-card { 
-            background: rgba(255, 255, 255, 0.05); 
-            padding: 40px; 
+            background: rgba(10, 15, 24, 0.9); 
+            padding: 30px; 
             border-radius: 20px; 
-            border: 1px solid rgba(0, 243, 255, 0.2); 
+            border: 1px solid var(--neon); 
             width: 100%; 
-            max-width: 400px; 
+            max-width: 450px; 
             text-align: center;
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
         }
 
-        h1 { font-family: 'Orbitron', sans-serif; font-size: 1.8rem; color: var(--neon); margin-bottom: 30px; }
-        
-        .input-group { margin-bottom: 20px; text-align: left; }
-        label { font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; display: block; }
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--neon); margin-bottom: 20px; letter-spacing: 2px; }
         
         input { 
             width: 100%; background: #000; border: 1px solid #333; 
             padding: 15px; border-radius: 10px; color: white; font-size: 1.2rem; 
-            box-sizing: border-box; outline: none; transition: 0.3s;
+            box-sizing: border-box; outline: none; margin-bottom: 15px;
         }
-        input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
 
         .locate-btn { 
             background: var(--neon); color: black; border: none; width: 100%; 
             padding: 15px; border-radius: 10px; font-weight: bold; cursor: pointer; 
-            font-family: 'Orbitron', sans-serif; margin-top: 10px;
+            font-family: 'Orbitron', sans-serif; transition: 0.3s;
+        }
+
+        /* Map Container */
+        #map { 
+            height: 250px; width: 100%; border-radius: 15px; 
+            margin-top: 20px; border: 1px solid #222; display: none;
         }
 
         .results { 
-            margin-top: 30px; padding: 20px; border-radius: 10px; 
-            background: rgba(0,0,0,0.5); display: none; text-align: left;
-            border: 1px solid #222;
+            margin-top: 20px; padding: 15px; border-radius: 10px; 
+            background: rgba(255,255,255,0.05); display: none; text-align: left;
         }
-        .res-item { margin-bottom: 8px; font-size: 0.95rem; }
-        .res-label { color: var(--neon); font-weight: 600; margin-right: 10px; }
-        
-        .nav-home { margin-top: 30px; text-decoration: none; color: #555; font-size: 0.8rem; transition: 0.3s; }
-        .nav-home:hover { color: var(--neon); }
+        .res-item { margin-bottom: 5px; font-size: 0.9rem; border-bottom: 1px solid #222; padding-bottom: 5px; }
+        .res-label { color: var(--neon); font-weight: 600; text-transform: uppercase; font-size: 0.7rem; display: block; }
     </style>
 </head>
 <body>
 
     <div class="locator-card">
-        <h1>SIGNAL SCANNER</h1>
+        <h1>GEOSPATIAL SCANNER</h1>
 
-        <div class="input-group">
-            <label>International Number Format</label>
-            <input type="text" id="phoneInput" placeholder="+254 XXX XXX XXX">
-        </div>
-
-        <button class="locate-btn" onclick="startScan()">RUN ANALYSIS</button>
+        <input type="text" id="phoneInput" placeholder="+254 XXX XXX XXX">
+        <button class="locate-btn" onclick="startTracking()">INITIALIZE TRACKING</button>
 
         <div id="resultsBox" class="results">
-            <div class="res-item"><span class="res-label">ORIGIN:</span> <span id="resCountry">-</span></div>
-            <div class="res-item"><span class="res-label">CARRIER:</span> <span id="resCarrier">-</span></div>
-            <div class="res-item"><span class="res-label">SIGNAL:</span> 🟢 SECURE</div>
+            <div class="res-item"><span class="res-label">Country</span> <span id="resCountry">-</span></div>
+            <div class="res-item"><span class="res-label">County / Region</span> <span id="resCounty">-</span></div>
+            <div class="res-item"><span class="res-label">Carrier</span> <span id="resCarrier">-</span></div>
         </div>
+
+        <div id="map"></div>
     </div>
 
-    <a href="https://macoguma.github.io/success-/" class="nav-home">RETURN TO MAIN HUB</a>
-
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        function startScan() {
+        let map;
+        
+        function initMap(lat, lon) {
+            if (map) map.remove(); 
+            document.getElementById('map').style.display = 'block';
+            map = L.map('map').setView([lat, lon], 6);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap'
+            }).addTo(map);
+            L.marker([lat, lon]).addTo(map);
+        }
+
+        function startTracking() {
             const input = document.getElementById('phoneInput').value;
-            const resBox = document.getElementById('resultsBox');
             const btn = document.querySelector('.locate-btn');
 
             if (!input.includes('+')) {
-                alert("Please use international format (starting with +)");
+                alert("Please enter number in International Format (+)");
                 return;
             }
 
-            btn.innerText = "SCANNING...";
-            resBox.style.display = "none";
+            btn.innerText = "TRIANGULATING...";
 
             setTimeout(() => {
-                btn.innerText = "RUN ANALYSIS";
-                resBox.style.display = "block";
+                btn.innerText = "INITIALIZE TRACKING";
+                document.getElementById('resultsBox').style.display = "block";
                 
+                // Logic for Kenya (+254)
                 if(input.startsWith("+254")) {
                     document.getElementById('resCountry').innerText = "KENYA";
                     document.getElementById('resCarrier').innerText = "SAFARICOM / AIRTEL";
-                } else if(input.startsWith("+1")) {
-                    document.getElementById('resCountry').innerText = "USA";
+                    
+                    // Specific County detection based on common prefixes (Simulated)
+                    if(input.includes("722") || input.includes("711")) {
+                        document.getElementById('resCounty').innerText = "Nairobi County";
+                        initMap(-1.286389, 36.817223);
+                    } else {
+                        document.getElementById('resCounty').innerText = "Mombasa County";
+                        initMap(-4.0435, 39.6682);
+                    }
+                } 
+                // Logic for USA (+1)
+                else if(input.startsWith("+1")) {
+                    document.getElementById('resCountry').innerText = "UNITED STATES";
+                    document.getElementById('resCounty').innerText = "New York / Federal";
                     document.getElementById('resCarrier').innerText = "AT&T / VERIZON";
+                    initMap(40.7128, -74.0060);
                 } else {
                     document.getElementById('resCountry').innerText = "INTERNATIONAL";
-                    document.getElementById('resCarrier').innerText = "GLOBAL ROAMING";
+                    document.getElementById('resCounty').innerText = "Global Node";
+                    document.getElementById('resCarrier').innerText = "Roaming Provider";
+                    initMap(0, 0);
                 }
-            }, 1200);
+            }, 1500);
         }
     </script>
 </body>
 </html>
+                    
