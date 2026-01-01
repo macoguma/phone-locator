@@ -14,95 +14,112 @@
             justify-content: center; align-items: center; height: 100vh; overflow: hidden; 
         }
 
-        /* HIGH-VISIBILITY 3D GLOBE WEB */
+        /* 3D GLOBE BACKGROUND - FULLY VISIBLE */
         .world-container {
             position: fixed; width: 100vw; height: 100vh; z-index: -1;
             display: flex; justify-content: center; align-items: center;
             perspective: 1200px;
-            background: radial-gradient(circle at center, #0a1f24 0%, #05080a 100%);
         }
 
         .globe {
-            width: 380px; height: 380px; position: relative;
+            width: 450px; height: 450px; position: relative;
             transform-style: preserve-3d;
-            animation: rotateGlobe 25s linear infinite;
+            animation: rotateGlobe 20s linear infinite;
         }
 
-        /* The Glowing Core */
-        .globe-core {
-            position: absolute; top: 50%; left: 50%;
-            width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(0, 243, 255, 0.1) 0%, transparent 70%);
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-        }
-
-        /* Enhanced Web Rings */
         .ring {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            border: 1.5px solid rgba(0, 243, 255, 0.6);
+            border: 1px solid rgba(0, 243, 255, 0.5);
             border-radius: 50%;
             box-shadow: 0 0 15px rgba(0, 243, 255, 0.2);
         }
 
-        /* Web Longitude Lines */
+        /* Longitude & Latitude Web */
         .ring:nth-child(1) { transform: rotateY(0deg); }
-        .ring:nth-child(2) { transform: rotateY(30deg); }
-        .ring:nth-child(3) { transform: rotateY(60deg); }
-        .ring:nth-child(4) { transform: rotateY(90deg); }
-        .ring:nth-child(5) { transform: rotateY(120deg); }
-        .ring:nth-child(6) { transform: rotateY(150deg); }
-        
-        /* The Equator/Latitude Lines */
-        .lat {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            border: 1px solid rgba(0, 243, 255, 0.4);
-            border-radius: 50%;
-        }
-        .lat-1 { transform: rotateX(90deg) scale(1); }
-        .lat-2 { transform: rotateX(90deg) translateZ(60px) scale(0.85); }
-        .lat-3 { transform: rotateX(90deg) translateZ(-60px) scale(0.85); }
+        .ring:nth-child(2) { transform: rotateY(45deg); }
+        .ring:nth-child(3) { transform: rotateY(90deg); }
+        .ring:nth-child(4) { transform: rotateY(135deg); }
+        .lat { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 1px solid rgba(0, 243, 255, 0.3); border-radius: 50%; transform: rotateX(90deg); }
 
         @keyframes rotateGlobe {
-            from { transform: rotateX(-15deg) rotateY(0deg); }
-            to { transform: rotateX(-15deg) rotateY(360deg); }
+            from { transform: rotateX(-10deg) rotateY(0deg); }
+            to { transform: rotateX(-10deg) rotateY(360deg); }
         }
 
-        /* DASHBOARD CARD */
+        /* TRANSPARENT CARD FOR BLENDING */
         .card { 
-            border: 2px solid var(--neon); padding: 35px; border-radius: 20px; 
+            border: 2px solid var(--neon); padding: 40px; border-radius: 20px; 
             width: 90%; max-width: 420px; text-align: center; 
-            background: rgba(5, 8, 10, 0.95); backdrop-filter: blur(15px); 
-            box-shadow: 0 0 50px rgba(0, 243, 255, 0.4);
+            background: rgba(5, 8, 10, 0.4); /* Lower opacity to see globe */
+            backdrop-filter: blur(4px); 
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.3);
             z-index: 10;
         }
 
-        h1 { font-size: 1.8rem; margin: 0; letter-spacing: 4px; text-shadow: 0 0 20px var(--neon); }
-        .subtitle { font-size: 0.7rem; margin-bottom: 30px; color: var(--neon); opacity: 0.9; letter-spacing: 3px; }
+        /* NEON GLOWING TITLE */
+        h1 { 
+            font-size: 2.2rem; margin: 0; letter-spacing: 4px; 
+            color: #fff;
+            text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon), 0 0 40px var(--neon);
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .subtitle { font-size: 0.7rem; margin-bottom: 30px; letter-spacing: 3px; opacity: 0.9; }
+
+        /* RUNNING 3D ANIMATION INPUT */
+        .input-wrapper {
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+            border: 1px solid var(--neon);
+            border-radius: 8px;
+            background: #000;
+        }
+
+        .input-bg-animation {
+            position: absolute;
+            top: 0; left: 0; width: 200%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0, 243, 255, 0.2), transparent);
+            animation: scanline 3s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
 
         input { 
-            width: 100%; padding: 16px; margin: 20px 0; 
-            background: rgba(0,0,0,0.7); border: 1px solid var(--neon); 
-            color: #fff; text-align: center; font-family: 'Orbitron'; outline: none; 
-            border-radius: 8px; font-size: 1rem;
+            width: 100%; padding: 18px; 
+            background: transparent; border: none;
+            color: #fff; text-align: center; font-family: 'Orbitron'; 
+            outline: none; font-size: 1rem; position: relative; z-index: 2;
         }
 
         button { 
             background: var(--neon); color: #000; border: none; padding: 18px; 
             width: 100%; font-weight: 900; cursor: pointer; 
             font-family: 'Orbitron'; transition: 0.4s; border-radius: 8px;
-            letter-spacing: 1px;
         }
-        button:hover { box-shadow: 0 0 30px var(--neon); background: #fff; transform: translateY(-2px); }
+        button:hover { box-shadow: 0 0 30px var(--neon); background: #fff; }
 
-        .progress-container { width: 100%; height: 10px; background: #000; margin-top: 30px; display: none; border: 1px solid var(--neon); border-radius: 5px; overflow: hidden; }
-        .bar { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 20px var(--neon); transition: width 0.2s; }
+        .progress-container { width: 100%; height: 10px; background: #000; margin-top: 30px; display: none; border: 1px solid var(--neon); }
+        .bar { width: 0%; height: 100%; background: var(--neon); box-shadow: 0 0 20px var(--neon); }
         
-        #status { font-size: 0.8rem; margin-top: 15px; font-weight: bold; display: none; text-shadow: 0 0 5px var(--neon); }
+        /* GLOWING LINK BOX */
         #linkBox { 
-            margin-top: 25px; padding: 15px; border: 1px dashed var(--neon); 
+            margin-top: 25px; padding: 15px; 
+            border: 2px solid var(--neon); 
             font-size: 0.7rem; display: none; word-break: break-all; 
-            background: rgba(0,243,255,0.1); color: #fff; border-radius: 5px;
+            background: rgba(0, 243, 255, 0.1); 
+            color: #fff; border-radius: 8px;
+            box-shadow: 0 0 20px var(--neon);
+            text-shadow: 0 0 5px var(--neon);
         }
     </style>
 </head>
@@ -110,16 +127,11 @@
 
     <div class="world-container">
         <div class="globe">
-            <div class="globe-core"></div>
             <div class="ring"></div>
             <div class="ring"></div>
             <div class="ring"></div>
             <div class="ring"></div>
-            <div class="ring"></div>
-            <div class="ring"></div>
-            <div class="lat lat-1"></div>
-            <div class="lat lat-2"></div>
-            <div class="lat lat-3"></div>
+            <div class="lat"></div>
         </div>
     </div>
 
@@ -127,7 +139,10 @@
         <h1>AUSTINE'S TECH</h1>
         <p class="subtitle">GLOBAL TRACKING HUB</p>
         
-        <input type="text" id="target" placeholder="TARGET NUMBER (e.g. 254...)">
+        <div class="input-wrapper">
+            <div class="input-bg-animation"></div>
+            <input type="text" id="target" placeholder="TARGET NUMBER">
+        </div>
         
         <button onclick="generate()">GENERATE TRACKING LINK</button>
         
@@ -135,7 +150,7 @@
             <div class="bar" id="pBar"></div>
         </div>
         
-        <p id="status"></p>
+        <p id="status" style="margin-top:15px; font-weight:bold;"></p>
         
         <div id="linkBox"></div>
     </div>
@@ -145,39 +160,31 @@
 
         function generate() {
             const num = document.getElementById('target').value;
-            if(!num || num.length < 9) return alert("System Error: Provide valid target identification.");
+            if(!num) return alert("Enter Target Number");
             
-            const btn = document.querySelector('button');
             const pCont = document.getElementById('pCont');
             const pBar = document.getElementById('pBar');
             const status = document.getElementById('status');
             const linkBox = document.getElementById('linkBox');
             
-            btn.disabled = true;
-            linkBox.style.display = "none";
             pCont.style.display = "block";
             status.style.display = "block";
-            status.style.color = "var(--neon)";
             
             let w = 0;
             const int = setInterval(() => {
-                w += Math.floor(Math.random() * 5) + 2;
+                w += 5;
                 if(w >= 100) {
-                    w = 100;
-                    clearInterval(int);
-                    status.innerText = "LINK ENCRYPTED & SECURED";
+                    w = 100; clearInterval(int);
+                    status.innerText = "SUCCESSFUL";
                     status.style.color = "#00ff00";
-                    
                     const url = window.location.origin + window.location.pathname.replace('index.html','') + "track.html?target="+num+"&owner="+MY_NUM;
                     linkBox.style.display = "block";
-                    linkBox.innerText = "SEND THIS LINK TO TARGET: \n" + url;
-                    btn.disabled = false;
+                    linkBox.innerText = "LINK GENERATED: " + url;
                 }
                 pBar.style.width = w + "%";
-                status.innerText = "SATELLITE INTERCEPT: " + w + "%";
-            }, 120);
+            }, 100);
         }
     </script>
 </body>
 </html>
-  
+          
